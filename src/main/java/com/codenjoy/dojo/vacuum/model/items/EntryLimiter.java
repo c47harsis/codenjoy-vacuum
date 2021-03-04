@@ -24,32 +24,42 @@ package com.codenjoy.dojo.vacuum.model.items;
 
 import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.services.Point;
-import com.codenjoy.dojo.vacuum.model.DirectionSwitcher;
 import com.codenjoy.dojo.vacuum.model.Elements;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.codenjoy.dojo.services.Direction.*;
 import static com.codenjoy.dojo.vacuum.model.Elements.*;
 
-public class DirectionSwitcherItem extends AbstractItem {
-    private static final Map<Elements, Direction> elementsToDirections = new HashMap<>();
-    static {
-        elementsToDirections.put(SWITCH_LEFT, LEFT);
-        elementsToDirections.put(SWITCH_UP, UP);
-        elementsToDirections.put(SWITCH_RIGHT, RIGHT);
-        elementsToDirections.put(SWITCH_DOWN, DOWN);
+public class EntryLimiter extends AbstractItem {
+
+    private static final Map<Elements, List<Direction>> elements =
+            new HashMap<>(){{
+                put(LIMITER_LEFT, Arrays.asList(LEFT));
+                put(LIMITER_UP, Arrays.asList(UP));
+                put(LIMITER_RIGHT, Arrays.asList(RIGHT));
+                put(LIMITER_DOWN, Arrays.asList(DOWN));
+                put(LIMITER_HORIZONTAL, Arrays.asList(LEFT, RIGHT));
+                put(LIMITER_VERTICAL, Arrays.asList(UP, DOWN));
+            }};
+
+    private List<Direction> permitted;
+
+    public EntryLimiter(Point pt, Elements element) {
+        super(pt, element);
+        permitted = elements.get(element);
     }
 
-    private final DirectionSwitcher switcher;
-
-    public DirectionSwitcherItem(Point point, Elements element) {
-        super(point, element);
-        this.switcher = new DirectionSwitcher(point.getX(), point.getY(), elementsToDirections.get(element));
+    public boolean canEnterFrom(Point pt) {
+        return checkEnter(permitted, pt, this);
     }
 
-    public Direction getDirection() {
-        return switcher.getDirection();
+    public static boolean checkEnter(List<Direction> permitted, Point from, Point to) {
+        return permitted.stream()
+                .map(direction -> direction.change(to))
+                .anyMatch(pt -> pt.equals(from));
     }
 }

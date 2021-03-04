@@ -1,4 +1,4 @@
-package com.codenjoy.dojo.vacuum.model.items;
+package com.codenjoy.dojo.vacuum.services;
 
 /*-
  * #%L
@@ -22,12 +22,32 @@ package com.codenjoy.dojo.vacuum.model.items;
  * #L%
  */
 
-import com.codenjoy.dojo.services.Point;
-import com.codenjoy.dojo.vacuum.model.Elements;
+import com.codenjoy.dojo.services.settings.SettingsImpl;
+import com.codenjoy.dojo.services.settings.SettingsReader;
 
-public class Dust extends AbstractItem {
+import static com.codenjoy.dojo.vacuum.services.GameSettings.Keys.*;
 
-    public Dust(Point pt) {
-        super(pt, Elements.DUST);
+public class GameSettings extends SettingsImpl implements SettingsReader<GameSettings> {
+
+    public enum Keys implements Key {
+
+        CLEANING_ONE_CELL_REWARD("Cleaning one cell reward"),
+        WASTE_OF_TIME_PENALTY("Waste of time penalty");
+
+        private String key;
+
+        Keys(String key) {
+            this.key = key;
+        }
+
+        @Override
+        public String key() {
+            return key;
+        }
+    }
+
+    public GameSettings() {
+        integer(CLEANING_ONE_CELL_REWARD, 1);
+        integer(WASTE_OF_TIME_PENALTY, 1);
     }
 }

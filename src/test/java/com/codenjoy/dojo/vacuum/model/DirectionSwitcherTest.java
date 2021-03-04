@@ -22,16 +22,15 @@ package com.codenjoy.dojo.vacuum.model;
  * #L%
  */
 
-import com.codenjoy.dojo.vacuum.services.Event;
 import org.junit.Test;
 
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static com.codenjoy.dojo.vacuum.services.Event.TIME_WASTED;
 
 public class DirectionSwitcherTest extends AbstractGameTest {
 
     @Test
     public void vacuumShouldChangeDirection_whenSteppingOnDirectionSwitcher() {
+        // given
         givenFl("######" +
                 "#S ↓ #" +
                 "# →  #" +
@@ -39,11 +38,14 @@ public class DirectionSwitcherTest extends AbstractGameTest {
                 "#    #" +
                 "######");
 
+        // when
         hero.right();
         game.tick();
         game.tick();
         game.tick();
         game.tick();
+
+        // then
         assertE("######" +
                 "#S ↓ #" +
                 "# →  #" +
@@ -52,6 +54,7 @@ public class DirectionSwitcherTest extends AbstractGameTest {
                 "######");
 
         game.tick();
+
         assertE("######" +
                 "#S ↓ #" +
                 "# →  #" +
@@ -61,6 +64,7 @@ public class DirectionSwitcherTest extends AbstractGameTest {
 
         game.tick();
         game.tick();
+
         assertE("######" +
                 "#S ↓ #" +
                 "# →O #" +
@@ -69,6 +73,7 @@ public class DirectionSwitcherTest extends AbstractGameTest {
                 "######");
 
         game.tick();
+
         assertE("######" +
                 "#S ↓ #" +
                 "# → O#" +
@@ -79,6 +84,7 @@ public class DirectionSwitcherTest extends AbstractGameTest {
 
     @Test
     public void shouldTurnAround_whenStepOnSwitcherInOppositeDirection() {
+        // given
         givenFl("######" +
                 "#S   #" +
                 "#    #" +
@@ -86,10 +92,13 @@ public class DirectionSwitcherTest extends AbstractGameTest {
                 "#↑   #" +
                 "######");
 
+        // when
         hero.down();
         game.tick();
         game.tick();
         game.tick();
+
+        // then
         assertE("######" +
                 "#S   #" +
                 "#    #" +
@@ -100,6 +109,7 @@ public class DirectionSwitcherTest extends AbstractGameTest {
         game.tick();
         game.tick();
         game.tick();
+
         assertE("######" +
                 "#O   #" +
                 "#    #" +
@@ -110,23 +120,27 @@ public class DirectionSwitcherTest extends AbstractGameTest {
 
     @Test
     public void shouldNotBeFined_whenStepOnSwitcher() {
+        // given
         givenFl("#####" +
                 "#S↓ #" +
                 "#↑← #" +
                 "#   #" +
                 "#####");
 
+        // when
         hero.right();
         game.tick();
         game.tick();
         game.tick();
         game.tick();
+
+        // then
         assertE("#####" +
                 "#O↓ #" +
                 "#↑← #" +
                 "#   #" +
                 "#####");
 
-        verify(listener, never()).event(Event.TIME_WASTED);
+        neverFired(TIME_WASTED);
     }
 }

@@ -29,19 +29,24 @@ public class Levels {
 
     private static final List<Level> levels = new ArrayList<>();
 
+    // TODO сделать левелы изменяемыми на админке и убрать этот хардкод
+    public static int SIZE = dustLevel1().size();
+
     static {
-        levels.add(level1());
-        levels.add(level2());
-        levels.add(level3());
-        levels.add(level4());
+        levels.add(dustLevel1());
+        levels.add(switchLevel2());
+        levels.add(limiterLevel3());
+        levels.add(roundaboutLevel4());
     }
 
     public static Level get(int number) {
         if (number < 1) {
-            throw new IllegalArgumentException("Level number should be greater than 1 but received " + number);
+            throw new IllegalArgumentException("Level number should " +
+                    "be greater than 1 but received " + number);
         }
         if (number > levels.size()) {
-            throw new IllegalArgumentException("Has only " + count() + " levels but requested level " + number);
+            throw new IllegalArgumentException("Has only " + count() +
+                    " levels but requested level " + number);
         }
         return levels.get(number - 1);
     }
@@ -50,9 +55,8 @@ public class Levels {
         return levels.size();
     }
 
-    private static Level level1() {
-        return Level.generate(
-                        "##########" +
+    private static Level dustLevel1() {
+        return generate("##########" +
                         "#*S#***#*#" +
                         "#*##*#*#*#" +
                         "#****#*#*#" +
@@ -65,13 +69,12 @@ public class Levels {
         );
     }
 
-//    SWITCH_LEFT('←'),
-//    SWITCH_RIGHT('→'),
-//    SWITCH_UP('↑'),
-//    SWITCH_DOWN('↓')
-    private static Level level2() {
-        return Level.generate(
-                        "##########" +
+    public static Level generate(String map) {
+        return new Level(map);
+    }
+
+    private static Level switchLevel2() {
+        return generate("##########" +
                         "#***S←**##" +
                         "#*####**##" +
                         "#*#↓****←#" +
@@ -84,15 +87,8 @@ public class Levels {
         );
     }
 
-//    LIMITER_LEFT('╡'),
-//    LIMITER_RIGHT('╞'),
-//    LIMITER_UP('╨'),
-//    LIMITER_DOWN('╥'),
-//    LIMITER_VERTICAL('║'),
-//    LIMITER_HORIZONTAL('═')
-    private static Level level3() {
-        return Level.generate(
-                        "##########" +
+    private static Level limiterLevel3() {
+        return generate("##########" +
                         "#****┌***#" +
                         "####**╡╥*#" +
                         "#S*╡══**╡#" +
@@ -105,13 +101,8 @@ public class Levels {
         );
     }
 
-//    ROUNDABOUT_LEFT_UP('┘'),
-//    ROUNDABOUT_UP_RIGHT('└'),
-//    ROUNDABOUT_RIGHT_DOWN('┌'),
-//    ROUNDABOUT_DOWN_LEFT('┐')
-    private static Level level4() {
-        return Level.generate(
-                        "##########" +
+    private static Level roundaboutLevel4() {
+        return generate("##########" +
                         "#*#####**#" +
                         "#***##*┐##" +
                         "#*#*###**#" +

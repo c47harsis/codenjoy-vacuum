@@ -24,23 +24,16 @@ package com.codenjoy.dojo.vacuum.client.ai;
 
 
 import com.codenjoy.dojo.client.Solver;
-import com.codenjoy.dojo.vacuum.client.Board;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.algs.DeikstraFindWay;
+import com.codenjoy.dojo.vacuum.client.Board;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Это алгоритм твоего бота. Он будет запускаться в игру с первым
- * зарегистрировавшимся игроком, чтобы ему не было скучно играть самому.
- * Реализуй его как хочешь, хоть на Random (только используй для этого
- * {@see Dice} что приходит через конструктор).
- * Для его запуска воспользуйся методом {@see ApofigSolver#main}
- */
 public class AISolver implements Solver<Board> {
 
     private DeikstraFindWay way;
@@ -53,12 +46,9 @@ public class AISolver implements Solver<Board> {
 
     public DeikstraFindWay.Possible possible(final Board board) {
         return new DeikstraFindWay.Possible() {
-            @Override // TODO test me
-            public boolean possible(Point point) {
-                int x = point.getX();
-                int y = point.getY();
-                if (board.isBarrierAt(x, y)) return false;
-
+            @Override
+            public boolean possible(Point pt) {
+                if (board.isBarrierAt(pt)) return false;
                 return true;
             }
         };

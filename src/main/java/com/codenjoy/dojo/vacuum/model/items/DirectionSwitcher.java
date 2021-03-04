@@ -1,4 +1,4 @@
-package com.codenjoy.dojo.vacuum.model;
+package com.codenjoy.dojo.vacuum.model.items;
 
 /*-
  * #%L
@@ -23,38 +23,33 @@ package com.codenjoy.dojo.vacuum.model;
  */
 
 import com.codenjoy.dojo.services.Direction;
+import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.vacuum.model.Elements;
 
-public class DirectionSwitcher {
-    private final int x;
-    private final int y;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.codenjoy.dojo.services.Direction.*;
+import static com.codenjoy.dojo.vacuum.model.Elements.*;
+
+public class DirectionSwitcher extends AbstractItem {
+
+    private static final Map<Elements, Direction> elements =
+            new HashMap<>(){{
+                put(SWITCH_LEFT, LEFT);
+                put(SWITCH_UP, UP);
+                put(SWITCH_RIGHT, RIGHT);
+                put(SWITCH_DOWN, DOWN);
+            }};
+
     private Direction direction;
 
-    public DirectionSwitcher(int x, int y, Direction direction) {
-        if (direction == null) {
-            throw new IllegalArgumentException("Direction can not be null");
-        }
-        this.x = x;
-        this.y = y;
-        this.direction = direction;
+    public DirectionSwitcher(Point pt, Elements element) {
+        super(pt, element);
+        direction = elements.get(element);
     }
 
-    public DirectionSwitcher(DirectionSwitcher another) {
-        this(another.x, another.y, another.direction);
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public void setDirection(Direction direction) {
-        this.direction = direction;
-    }
-
-    public Direction getDirection() {
+    public Direction direction() {
         return direction;
     }
 }

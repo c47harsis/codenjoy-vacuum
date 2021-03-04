@@ -22,16 +22,15 @@ package com.codenjoy.dojo.vacuum.model;
  * #L%
  */
 
-import com.codenjoy.dojo.vacuum.services.Event;
 import org.junit.Test;
 
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static com.codenjoy.dojo.vacuum.services.Event.TIME_WASTED;
 
 public class EntryLimiterTest extends AbstractGameTest {
 
     @Test
     public void shouldBeAbleToEnterCell_whenTryingFromPermittedDirection() {
+        // given
         givenFl("######" +
                 "#S####" +
                 "#║╞═╥#" +
@@ -39,10 +38,13 @@ public class EntryLimiterTest extends AbstractGameTest {
                 "#╨╡═╡#" +
                 "######");
 
+        // when
         hero.down();
         game.tick();
         game.tick();
         game.tick();
+
+        // then
         assertE("######" +
                 "#S####" +
                 "#║╞═╥#" +
@@ -50,10 +52,13 @@ public class EntryLimiterTest extends AbstractGameTest {
                 "#O╡═╡#" +
                 "######");
 
+        // when
         hero.right();
         game.tick();
         game.tick();
         game.tick();
+
+        // then
         assertE("######" +
                 "#S####" +
                 "#║╞═╥#" +
@@ -61,19 +66,24 @@ public class EntryLimiterTest extends AbstractGameTest {
                 "#╨╡═O#" +
                 "######");
 
+        // when
         hero.up();
         game.tick();
         game.tick();
+
+        // then
         assertE("######" +
                 "#S####" +
                 "#║╞═O#" +
                 "#║##║#" +
                 "#╨╡═╡#" +
                 "######");
-
+        // when
         hero.left();
         game.tick();
         game.tick();
+
+        // then
         assertE("######" +
                 "#S####" +
                 "#║O═╥#" +
@@ -84,70 +94,63 @@ public class EntryLimiterTest extends AbstractGameTest {
 
     @Test
     public void shouldNotFinePlayer_whenSteppingOnLimiters() {
-        givenFl("######" +
-                "#S####" +
-                "#║╞═╥#" +
-                "#║##║#" +
-                "#╨╡═╡#" +
-                "######");
+        // given when
+        shouldBeAbleToEnterCell_whenTryingFromPermittedDirection();
 
-        hero.down();
-        game.tick();
-        game.tick();
-        game.tick();
-
-        hero.right();
-        game.tick();
-        game.tick();
-        game.tick();
-
-        hero.up();
-        game.tick();
-        game.tick();
-
-        hero.left();
-        game.tick();
-        game.tick();
-
-        verify(listener, never()).event(Event.TIME_WASTED);
+        // then
+        neverFired(TIME_WASTED);
     }
 
     @Test
-    public void shouldNotBeAbleToEnterCell_whenRightLimiterDoesNotAllowIt() {
-        // Try to enter from left
+    public void shouldNotBeAbleToEnterCell_whenRightLimiterDoesNotAllowIt_tryToEnterFromLeft() {
+        // given
         givenFl("####" +
                 "#S╞#" +
                 "#  #" +
                 "####");
 
+        // when
         hero.right();
         game.tick();
+
+        // then
         assertE("####" +
                 "#O╞#" +
                 "#  #" +
                 "####");
+    }
 
-        // Try to enter from above
+    @Test
+    public void shouldNotBeAbleToEnterCell_whenRightLimiterDoesNotAllowIt_tryToEnterFromAbove() {
+        // given
         givenFl("####" +
                 "#S #" +
                 "#╞ #" +
                 "####");
 
+        // when
         hero.down();
         game.tick();
+
+        // then
         assertE("####" +
                 "#O #" +
                 "#╞ #" +
                 "####");
+    }
 
-        // Try to enter from below
+    @Test
+    public void shouldNotBeAbleToEnterCell_whenRightLimiterDoesNotAllowIt_tryToEnterFromBelow() {
+        // given
         givenFl("####" +
                 "#╞ #" +
                 "#S #" +
                 "####");
-
+        // when
         hero.up();
         game.tick();
+
+        // then
         assertE("####" +
                 "#╞ #" +
                 "#O #" +
@@ -155,41 +158,55 @@ public class EntryLimiterTest extends AbstractGameTest {
     }
 
     @Test
-    public void shouldNotBeAbleToEnterCell_whenLeftLimiterDoesNotAllowIt() {
-        // Try to enter from right
+    public void shouldNotBeAbleToEnterCell_whenLeftLimiterDoesNotAllowIt_tryToEnterFromRight() {
+        // given
         givenFl("####" +
                 "#╡S#" +
                 "#  #" +
                 "####");
 
+        // when
         hero.left();
         game.tick();
+
+        // then
         assertE("####" +
                 "#╡O#" +
                 "#  #" +
                 "####");
+    }
 
-        // Try to enter from above
+    @Test
+    public void shouldNotBeAbleToEnterCell_whenLeftLimiterDoesNotAllowIt_tryToEnterFromAbove() {
+        // given
         givenFl("####" +
                 "#S #" +
                 "#╡ #" +
                 "####");
 
+        // when
         hero.down();
         game.tick();
+
+        // then
         assertE("####" +
                 "#O #" +
                 "#╡ #" +
                 "####");
+    }
 
-        // Try to enter from below
+    @Test
+    public void shouldNotBeAbleToEnterCell_whenLeftLimiterDoesNotAllowIt_tryToEnterFromBelow() {
+        // given
         givenFl("####" +
                 "#╡ #" +
                 "#S #" +
                 "####");
-
+        // when
         hero.up();
         game.tick();
+
+        // then
         assertE("####" +
                 "#╡ #" +
                 "#O #" +
@@ -197,41 +214,56 @@ public class EntryLimiterTest extends AbstractGameTest {
     }
 
     @Test
-    public void shouldNotBeAbleToEnterCell_whenUpLimiterDoesNotAllowIt() {
-        // Try to enter from right
+    public void shouldNotBeAbleToEnterCell_whenUpLimiterDoesNotAllowIt_tryToEnterFromRight() {
+        // given
         givenFl("####" +
                 "#╨S#" +
                 "#  #" +
                 "####");
 
+        // when
         hero.left();
         game.tick();
+
+        // then
         assertE("####" +
                 "#╨O#" +
                 "#  #" +
                 "####");
+    }
 
-        // Try to enter from left
+    @Test
+    public void shouldNotBeAbleToEnterCell_whenUpLimiterDoesNotAllowIt_tryToEnterFromLeft() {
+        // given
         givenFl("####" +
                 "#S╨#" +
                 "#  #" +
                 "####");
 
+        // when
         hero.right();
         game.tick();
+
+        // then
         assertE("####" +
                 "#O╨#" +
                 "#  #" +
                 "####");
+    }
 
-        // Try to enter from below
+    @Test
+    public void shouldNotBeAbleToEnterCell_whenUpLimiterDoesNotAllowIt_tryToEnterFromBelow() {
+        // given
         givenFl("####" +
                 "#╨ #" +
                 "#S #" +
                 "####");
 
+        // when
         hero.up();
         game.tick();
+
+        // then
         assertE("####" +
                 "#╨ #" +
                 "#O #" +
@@ -239,41 +271,56 @@ public class EntryLimiterTest extends AbstractGameTest {
     }
 
     @Test
-    public void shouldNotBeAbleToEnterCell_whenDownLimiterDoesNotAllowIt() {
-        // Try to enter from right
+    public void shouldNotBeAbleToEnterCell_whenDownLimiterDoesNotAllowIt_tryToEnterFromRight() {
+        // given
         givenFl("####" +
                 "#╥S#" +
                 "#  #" +
                 "####");
 
+        // when
         hero.left();
         game.tick();
+
+        // then
         assertE("####" +
                 "#╥O#" +
                 "#  #" +
                 "####");
+    }
 
-        // Try to enter from left
+    @Test
+    public void shouldNotBeAbleToEnterCell_whenDownLimiterDoesNotAllowIt_tryToEnterFromLeft() {
+        // given
         givenFl("####" +
                 "#S╥#" +
                 "#  #" +
                 "####");
 
+        // when
         hero.right();
         game.tick();
+
+        // then
         assertE("####" +
                 "#O╥#" +
                 "#  #" +
                 "####");
+    }
 
-        // Try to enter from above
+    @Test
+    public void shouldNotBeAbleToEnterCell_whenDownLimiterDoesNotAllowIt_tryToEnterFromAbove() {
+        // given
         givenFl("####" +
                 "#S #" +
                 "#╥ #" +
                 "####");
 
+        // when
         hero.down();
         game.tick();
+
+        // then
         assertE("####" +
                 "#O #" +
                 "#╥ #" +
@@ -281,28 +328,37 @@ public class EntryLimiterTest extends AbstractGameTest {
     }
 
     @Test
-    public void shouldNotBeAbleToEnterCell_whenHorizontalLimiterDoesNotAllowIt() {
-        // Try to enter from above
+    public void shouldNotBeAbleToEnterCell_whenHorizontalLimiterDoesNotAllowIt_tryToEnterFromAbove() {
+        // given
         givenFl("####" +
                 "#S #" +
                 "#═ #" +
                 "####");
 
+        // when
         hero.down();
         game.tick();
+
+        // then
         assertE("####" +
                 "#O #" +
                 "#═ #" +
                 "####");
+    }
 
-        // Try to enter from below
+    @Test
+    public void shouldNotBeAbleToEnterCell_whenHorizontalLimiterDoesNotAllowIt_tryToEnterFromBelow() {
+        // given
         givenFl("####" +
                 "#═ #" +
                 "#S #" +
                 "####");
 
+        // when
         hero.up();
         game.tick();
+
+        // then
         assertE("####" +
                 "#═ #" +
                 "#O #" +
@@ -310,28 +366,37 @@ public class EntryLimiterTest extends AbstractGameTest {
     }
 
     @Test
-    public void shouldNotBeAbleToEnterCell_whenVerticalLimiterDoesNotAllowIt() {
-        // Try to enter from left
+    public void shouldNotBeAbleToEnterCell_whenVerticalLimiterDoesNotAllowIt_tryToEnterFromLeft() {
+        // given
         givenFl("####" +
                 "#S║#" +
                 "#  #" +
                 "####");
 
+        // when
         hero.right();
         game.tick();
+
+        // then
         assertE("####" +
                 "#O║#" +
                 "#  #" +
                 "####");
+    }
 
-        // Try to enter from right
+    @Test
+    public void shouldNotBeAbleToEnterCell_whenVerticalLimiterDoesNotAllowIt_tryToEnterFromRight() {
+        // given
         givenFl("####" +
                 "#║S#" +
                 "#  #" +
                 "####");
 
+        // when
         hero.left();
         game.tick();
+
+        // then
         assertE("####" +
                 "#║O#" +
                 "#  #" +

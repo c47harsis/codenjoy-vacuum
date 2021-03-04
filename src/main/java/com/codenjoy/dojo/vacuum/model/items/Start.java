@@ -27,11 +27,7 @@ import com.codenjoy.dojo.vacuum.model.Elements;
 
 public class Start extends AbstractItem {
 
-    public Start(Start start) {
-        super(start);
-    }
-
-    public Start(Point point) {
-        super(point, Elements.START);
+    public Start(Point pt) {
+        super(pt, Elements.START);
     }
 }

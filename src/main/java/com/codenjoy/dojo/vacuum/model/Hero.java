@@ -27,28 +27,23 @@ import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.State;
 import com.codenjoy.dojo.services.multiplayer.PlayerHero;
-import com.codenjoy.dojo.vacuum.model.items.RoundaboutItem;
 import com.codenjoy.dojo.vacuum.services.Event;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-/**
- * Это реализация героя. Обрати внимание, что он имплементит {@see Joystick}, а значит может быть управляем фреймворком
- * Так же он имплементит {@see Tickable}, что значит - есть возможность его оповещать о каждом тике игры.
- * Ну и конечно же он имплементит {@see State}, а значит может быть отрисован на поле.
- * Часть этих интерфейсов объявлены в {@see PlayerHero}, а часть явно тут.
- */
 public class Hero extends PlayerHero<Field> implements State<Elements, Player> {
+
     private static final int RESTART_ACTION = 0;
 
     private Direction direction;
-    private List<Event> events;
-    private boolean restartRequested = false;
+    private boolean reset = false;
+    private boolean win = false;
+    private Player player;
 
-    public Hero(Point xy) {
-        super(xy);
+    public Hero(Point pt) {
+        super(pt);
+    }
+
+    public void init(Player player) {
+        this.player = player;
     }
 
     @Override
@@ -56,103 +51,92 @@ public class Hero extends PlayerHero<Field> implements State<Elements, Player> {
         this.field = field;
     }
 
+    public void tryChange(Direction input) {
+        if (direction == null) {
+            direction = input;
+        }
+    }
+
     @Override
     public void down() {
-        if (direction == null) {
-            direction = Direction.DOWN;
-        }
+        tryChange(Direction.DOWN);
     }
 
     @Override
     public void up() {
-        if (direction == null) {
-            direction = Direction.UP;
-        }
+        tryChange(Direction.UP);
     }
 
     @Override
     public void left() {
-        if (direction == null) {
-            direction = Direction.LEFT;
-        }
+        tryChange(Direction.LEFT);
     }
 
     @Override
     public void right() {
-        if (direction == null) {
-            direction = Direction.RIGHT;
-        }
+        tryChange(Direction.RIGHT);
     }
 
     @Override
-    public void act(int... codes) {
-        if (codes.length > 0 && codes[0] == RESTART_ACTION) {
-            restartRequested = true;
+    public void act(int... p) {
+        if (p.length > 0 && p[0] == RESTART_ACTION) {
+            reset = true;
         }
     }
 
     @Override
     public void tick() {
-        events = new ArrayList<>();
-
-        if (restartRequested) {
-            events.add(Event.RESTART);
-            return;
-        }
-
         if (direction != null) {
-            Point destination = direction.change(this.copy());
-            goTo(destination);
+            tryMove(direction.change(this.copy()));
         }
 
         if (field.isAllClear()) {
-            events.add(Event.ALL_CLEAR);
+            player.event(Event.ALL_CLEAR);
+            win = true;
         }
     }
 
-    private void goTo(Point destination) {
-        Boolean isNotEntryLimited = field.getDirectionLimiter(destination)
-                .map(l -> l.canEnterFrom(this))
-                .orElse(true);
-
-        Optional<RoundaboutItem> roundabout = field.getRoundabout(destination);
-
-        isNotEntryLimited &= roundabout.map(r -> r.canEnterFrom(this))
-                .orElse(true);
-
-        if (field.isBarrier(destination) || !isNotEntryLimited) {
+    public void tryMove(Point to) {
+        if (field.isBarrier(to) || !field.canMove(this, to)) {
             direction = null;
             return;
         }
 
-        roundabout.ifPresent(r -> this.direction = r.enterFrom(this));
-        move(destination);
+        direction = field.roundabout(to)
+                .map(it -> it.enterFrom(this))
+                .orElse(direction);
 
-        field.getDirectionSwitcher(destination)
-                .ifPresent(s -> this.direction = s.getDirection());
+        move(to);
 
-        if (field.isCleanPoint(destination)) {
-            events.add(Event.TIME_WASTED);
+        direction = field.switcher(to)
+                .map(it -> it.direction())
+                .orElse(direction);
+
+        if (field.isCleanPoint(to)) {
+            player.event(Event.TIME_WASTED);
         }
 
-        if (field.isDust(destination)) {
-            field.removeDust(destination);
-            events.add(Event.DUST_CLEANED);
+        if (field.isDust(to)) {
+            field.removeDust(to);
+            player.event(Event.DUST_CLEANED);
         }
 
-        Point next = direction.change(destination);
+        Point next = direction.change(to);
         if (field.isBarrier(next)) {
             direction = null;
         }
-
-    }
-
-    public List<Event> getEvents() {
-        return events;
     }
 
     @Override
     public Elements state(Player player, Object... alsoAtPoint) {
         return Elements.VACUUM;
+    }
+
+    public boolean win() {
+        return win;
+    }
+
+    public boolean reset() {
+        return reset;
     }
 }

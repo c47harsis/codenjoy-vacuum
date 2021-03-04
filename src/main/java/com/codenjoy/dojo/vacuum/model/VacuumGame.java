@@ -25,10 +25,9 @@ package com.codenjoy.dojo.vacuum.model;
 
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.printer.BoardReader;
-import com.codenjoy.dojo.vacuum.model.items.EntryLimiterItem;
-import com.codenjoy.dojo.vacuum.model.items.DirectionSwitcherItem;
-import com.codenjoy.dojo.vacuum.model.items.RoundaboutItem;
+import com.codenjoy.dojo.vacuum.model.items.*;
 import com.codenjoy.dojo.vacuum.model.level.Level;
+import com.codenjoy.dojo.vacuum.services.GameSettings;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -36,82 +35,116 @@ import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 
-/**
- * О! Это самое сердце игры - борда, на которой все происходит.
- * Если какой-то из жителей борды вдруг захочет узнать что-то у нее, то лучше ему дать интефейс {@see Field}
- * Борда реализует интерфейс {@see Tickable} чтобы быть уведомленной о каждом тике игры. Обрати внимание на {Sample#tick()}
- */
 public class VacuumGame implements Field {
 
     private final List<Player> players = new LinkedList<>();
-    private Level level;
-    private GameBoard board;
+    private final Level level;
+    private int size;
+    private Start start;
+    private List<Barrier> barriers;
+    private List<Dust> dust;
+    private List<DirectionSwitcher> switchers;
+    private List<EntryLimiter> limiters;
+    private List<Roundabout> roundabouts;
 
-    public VacuumGame(Level level) {
+    private GameSettings settings;
+
+    public VacuumGame(Level level, GameSettings settings) {
+        this.settings = settings;
         this.level = level;
-        this.board = level.newBoard();
+        reset();
+    }
+
+    public void reset() {
+        size = level.size();
+        start = level.start();
+        barriers = level.barriers();
+        dust = level.dust();
+        switchers = level.switchers();
+        limiters = level.limiters();
+        roundabouts = level.roundabouts();
     }
 
     @Override
     public void tick() {
-        players.forEach(player -> {
-            var hero = player.getHero();
-            hero.tick();
-            hero.getEvents().forEach(player::event);
-        });
+        players.stream()
+            .map(Player::getHero)
+            .forEach(Hero::tick);
     }
 
     @Override
-    public boolean isBarrier(Point destination) {
-        int x = destination.getX();
-        int y = destination.getY();
-        return board.isInBounds(x, y) && board.isBarrier(x, y);
-    }
-
-    @Override
-    public Point getStart() {
-        return board.getStart();
+    public boolean isBarrier(Point pt) {
+        return pt.isOutOf(size)
+                || anyMatch(barriers, pt);
     }
 
     @Override
     public boolean isAllClear() {
-        return board.isAllClear();
+        return dust.isEmpty();
     }
 
     @Override
+    public Optional<DirectionSwitcher> switcher(Point pt) {
+        return found(switchers, pt);
+    }
+
+    public <T extends Point> Optional<T> found(List<T> items, Point pt) {
+        return items.stream()
+                .filter(pt::equals)
+                .findFirst();
+    }
+
+    public <T extends Point> boolean anyMatch(List<T> items, Point pt) {
+        return items.stream()
+                .anyMatch(pt::equals);
+    }
+
+    @Override
+    public boolean isCleanPoint(Point pt) {
+        return !start.equals(pt)
+                && !barriers.contains(pt)
+                && !dust.contains(pt)
+                && !switchers.contains(pt)
+                && !limiters.contains(pt)
+                && !roundabouts.contains(pt);
+    }
+
+    @Override
+    public boolean isDust(Point pt) {
+        return anyMatch(dust, pt);
+    }
+
+    @Override
+    public void removeDust(Point pt) {
+        dust.remove(pt);
+    }
+
+    @Override
+    public Optional<EntryLimiter> limiter(Point pt) {
+        return found(limiters, pt);
+    }
+
+    @Override
+    public Point getStart() {
+        return start;
+    }
+
     public int getSize() {
-        return board.getSize();
+        return size;
     }
 
     @Override
-    public Optional<DirectionSwitcherItem> getDirectionSwitcher(Point point) {
-        return board.getDirectionSwitcher(point);
+    public Optional<Roundabout> roundabout(Point pt) {
+        return found(roundabouts, pt);
     }
 
     @Override
-    public boolean isCleanPoint(Point point) {
-        return board.isCleanPoint(point);
-    }
-
-    @Override
-    public boolean isDust(Point point) {
-        return board.isDust(point);
-    }
-
-    @Override
-    public void removeDust(Point point) {
-        board.removeDust(point);
-    }
-
-    @Override
-    public Optional<EntryLimiterItem> getDirectionLimiter(Point point) {
-        return board.getDirectionLimiter(point);
-    }
-
-    @Override
-    public Optional<RoundaboutItem> getRoundabout(Point destination) {
-        return board.getRoundabouts().stream()
-                .filter(r -> r.equals(destination)).findFirst();
+    public boolean canMove(Point from, Point to) {
+        return limiter(to)
+                .map(it -> it.canEnterFrom(from))
+                .orElse(roundabout(to)
+                        .map(it -> it.canEnterFrom(from))
+                        .orElse(true));
     }
 
     public List<Hero> getHeroes() {
@@ -125,7 +158,7 @@ public class VacuumGame implements Field {
         if (!players.contains(player)) {
             players.add(player);
         }
-        board = level.newBoard();
+        reset();
         player.newHero(this);
     }
 
@@ -140,21 +173,26 @@ public class VacuumGame implements Field {
 
             @Override
             public int size() {
-                return board.getSize();
+                return VacuumGame.this.getSize();
             }
 
             @Override
             public Iterable<? extends Point> elements() {
                 return new LinkedList<>() {{
                     addAll(getHeroes());
-                    addAll(board.getBarriers());
-                    addAll(board.getDust());
-                    addAll(board.getDirectionSwitchers());
-                    addAll(board.getDirectionLimiters());
-                    addAll(board.getRoundabouts());
-                    add(board.getStart());
+                    addAll(VacuumGame.this.barriers);
+                    addAll(VacuumGame.this.dust);
+                    addAll(VacuumGame.this.switchers);
+                    addAll(VacuumGame.this.limiters);
+                    addAll(VacuumGame.this.roundabouts);
+                    add(VacuumGame.this.start);
                 }};
             }
         };
+    }
+
+    @Override
+    public GameSettings settings() {
+        return settings;
     }
 }
